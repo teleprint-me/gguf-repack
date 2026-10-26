@@ -19,8 +19,8 @@
 set -euo pipefail   # Abort on error, unset vars, propagate failures
 
 # --- Paths ---
-LLAMA_ROOT=$(realpath ./.cache/llama.cpp)   # Path to local llama.cpp clone
-GGUF_ROOT=$(realpath ./gguf)                # Destination for gguf‑py helpers
+LLAMA_ROOT=./.cache/llama.cpp   # Path to local llama.cpp clone
+GGUF_ROOT=./gguf                # Destination for gguf‑py helpers
 
 # Ensure the cache directory exists
 mkdir -p .cache
