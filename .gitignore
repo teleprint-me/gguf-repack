@@ -1,5 +1,6 @@
-# Local cache
+# Local
 .cache
+gguf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
