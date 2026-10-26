@@ -1,79 +1,50 @@
 #!/usr/bin/env bash
+#
+# sync.sh – keep llama.cpp conversion helpers & gguf‑py utilities in sync
+#
+# The script performs the following steps:
+#   1. Clone or pull the latest `llama.cpp` repository (under .cache/llama.cpp).
+#   2. Create the target `gguf/` directory and its sub‑folders.
+#   3. Copy the conversion helpers, gguf‑py scripts, and the core gguf
+#      library from the repo to the local `gguf/` tree.
+#   4. Install the HF‑to‑GGUF conversion script as `__main__.py` in the
+#      root of the `gguf/` tree.
+#
+# Why `--update=older`?  
+#   * preserves file timestamps & permissions (`-a`)  
+#   * skips copying files that are newer locally (`--no-clobber`‑like)  
+#   * keeps nested directory structure (`--parents`)  
+#   * only copies if the source is newer (`--update=older`)  
 
-# sync.sh
-#
-# Due to breaking changes in the llama.cpp gguf-py package and the lack of
-# proper upstream PyPI updates, I’ve manually repackaged gguf-py into its
-# own unified package which includes CLI tool usage.
-#
-# When the llama.cpp core ABI changes, the model can break and need to be
-# "updated".  This means converting the original model weights from the
-# source format into GGUF again, which requires having the original
-# weights available.
-#
-# `convert_hf_to_gguf.py` can convert PyTorch or safetensors models to
-# GGUF format.  For example:
-#
-#   python -m agent.gguf \
-#       /mnt/models/p-e-w/gpt-oss-20b-heretic-ara-v3 \
-#       --outfile models/gpt-oss/gpt-oss-20b-heretic-ara-bf16.gguf \
-#       --outtype bf16
-#
-# The above command converts the HF checkpoint to a BF16‑quantized GGUF
-# file.
-#
-# Note: each update breaks the API.
-# A manual review is required before committing changes.
-#
-#  - `cp -a` preserves attributes (mtime, perms, etc.)
-#  - `--no-clobber` avoids accidentally overwriting something you
-#    might want to keep and keeps any local tweaks you might have made.
-#  - `--parents` preserves the directory hierarchy if it contains nested folders.
-#  - `--update` only when local files are `older` than upstream files.
+set -euo pipefail   # Abort on error, unset vars, propagate failures
 
-set -euo pipefail        # Bail on errors, use unset vars, propagate pipes
+# --- Paths ---
+LLAMA_ROOT=$(realpath ./.cache/llama.cpp)   # Path to local llama.cpp clone
+GGUF_ROOT=$(realpath ./gguf)                # Destination for gguf‑py helpers
 
-# ---
-#  Paths
-# ---
-declare -r LLAMA="${PWD}/.cache/llama.cpp"
-declare -r GGUF="${PWD}/gguf"
+# Ensure the cache directory exists
+mkdir -p .cache
 
-if [ ! -d .cache ]; then
-    mkdir .cache
-fi
-
-if [ ! -d .cache/llama.cpp ]; then
-    # repo doesn't exist locally, clone it
-    git clone "https://github.com/ggml-org/llama.cpp" .cache/llama.cpp
+# --- Clone / pull llama.cpp ---
+if [ ! -d "$LLAMA_ROOT" ]; then
+    git clone "https://github.com/ggml-org/llama.cpp" "$LLAMA_ROOT"
 else
-    # repo does exist, pull latest llama.cpp
-    git -C "$LLAMA" pull --ff-only
+    git -C "$LLAMA_ROOT" pull --ff-only
 fi
 
-# ---
-#  Make sure the target dir exists
-# ---
-mkdir -p "$GGUF/conversion" "$GGUF/scripts"
+# --- Prepare destination ---
+mkdir -p "$GGUF_ROOT/conversion" "$GGUF_ROOT/scripts"
 
-# ---
-# Copy the conversion helpers
-# ---
-cp -a --update=older "$LLAMA/conversion/." "${GGUF}/conversion"
+# --- Copy conversion helpers ---
+cp -a --update=older "$LLAMA_ROOT/conversion/."    "$GGUF_ROOT/conversion"
 
-# ---
-# Copy the GGUF‑Py utilities
-# ---
-cp -a --update=older "$LLAMA/gguf-py/gguf/scripts/." "${GGUF}/scripts"
+# --- Copy gguf‑py utilities ---
+cp -a --update=older "$LLAMA_ROOT/gguf-py/gguf/scripts/." "$GGUF_ROOT/scripts"
 
-# ---
-# Copy the core library (the `gguf/` folder itself)
-# ---
-cp -a --update=older "$LLAMA/gguf-py/gguf/." "$GGUF/"
+# --- Copy core gguf library ---
+cp -a --update=older "$LLAMA_ROOT/gguf-py/gguf/." "$GGUF_ROOT"
 
-# ---
-# Copy the conversion script into the repo root
-# ---
-cp -a --update=older "$LLAMA/convert_hf_to_gguf.py" "${GGUF}/__main__.py"
+# --- Install HF→GGUF converter ---
+cp -a --update=older "$LLAMA_ROOT/convert_hf_to_gguf.py" "$GGUF_ROOT/__main__.py"
 
 echo "✅ gguf sync complete – everything is up‑to‑date."
