@@ -1,101 +1,157 @@
 #!/usr/bin/env bash
+# ==============================================================
+#  build.sh – helper for the gguf‑repack repository
+#  --------------------------------------------------------------
+#  * clean   – remove build artifacts
+#  * setup   – create a fresh venv and install deps
+#  * sync    – pull the latest llama.cpp repo and copy files
+#  * update_import – adjust import statements for the local layout
+#  * build   – run `python -m build`
+#  * all     – run all build steps in chronological order.
+#  * help    – show this help
+#
+#  Usage: ./build.sh <command> [args]
+# ==============================================================
 
-# this script must be run from the root path of this repository.
-# all paths are fixed and relative to gguf-repack directory path.
+# ------------------------------------------------------------------
+# 1. Common configuration
+# ------------------------------------------------------------------
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"  # repo root
+CACHE_DIR="$ROOT_DIR/.cache"
+LLAMA_ROOT="$CACHE_DIR/llama.cpp"
+GGUF_ROOT="$ROOT_DIR/gguf"
+REQ_FILE="$ROOT_DIR/requirements.txt"
 
-set -euo pipefail   # Abort on error, unset vars, propagate failures
+# ------------------------------------------------------------------
+# 2. Utility helpers
+# ------------------------------------------------------------------
+die() { echo "ERROR: $*" >&2; exit 1; }
 
-# clean up python and build environment
-function clean() {
-    # note: not sure if .cache should be included
-    rm -rf .venv .cache gguf gguf.egg-info dist
+# Create directories if missing
+mkdir_if_missing() {
+    local dir="$1"
+    [[ -d "$dir" ]] || mkdir -p "$dir" || die "Could not create $dir"
 }
 
-# set up python environment
-function setup() {
-    if [ -d .venv ]; then
-        rm -rf .venv
-    fi
+# ------------------------------------------------------------------
+# 3. Commands
+# ------------------------------------------------------------------
 
+clean() {
+    echo "Cleaning build artifacts …"
+    rm -rf .venv .cache "$GGUF_ROOT" "$GGUF_ROOT.egg-info" dist
+}
+
+setup() {
+    echo "Setting up Python virtualenv …"
+    rm -rf .venv
     python -m venv .venv
-
+    # Activate in a subshell so we don’t pollute the current shell
     source .venv/bin/activate
-
-    pip install --upgrade pip
-    pip install -r requirements.txt
-
+    pip install --upgrade pip setuptools wheel
+    pip install -r "$REQ_FILE"
     deactivate
 }
 
-# sync gguf package
-function sync() {
-    # keep llama.cpp conversion helpers & gguf‑py utilities in sync
-    #
-    # The script performs the following steps:
-    #   1. Clone or pull the latest `llama.cpp` repository (under .cache/llama.cpp).
-    #   2. Create the target `gguf/` directory and its sub‑folders.
-    #   3. Copy the conversion helpers, gguf‑py scripts, and the core gguf
-    #      library from the repo to the local `gguf/` tree.
-    #   4. Install the HF‑to‑GGUF conversion script as `__main__.py` in the
-    #      root of the `gguf/` tree.
-    #
-    # Why `--update=older`?  
-    #   * preserves file timestamps & permissions (`-a`)  
-    #   * skips copying files that are newer locally (`--no-clobber`‑like)  
-    #   * keeps nested directory structure (`--parents`)  
-    #   * only copies if the source is newer (`--update=older`)  
+sync() {
+    local force=false
+    # Parse optional --force flag
+    while [[ "$1" == "--force" ]]; do
+        force=true
+        shift
+    done
 
-    # --- Paths ---
-    LLAMA_ROOT=./.cache/llama.cpp   # Path to local llama.cpp clone
-    GGUF_ROOT=./gguf                # Destination for gguf‑py helpers
+    echo "Synchronizing gguf helpers from llama.cpp …"
 
-    # Ensure the cache directory exists
-    mkdir -p .cache
+    # 1. Ensure cache dir exists
+    mkdir_if_missing "$CACHE_DIR"
 
-    # --- Clone / pull llama.cpp ---
-    if [ ! -d "$LLAMA_ROOT" ]; then
+    # 2. Clone or update llama.cpp
+    if [[ ! -d "$LLAMA_ROOT/.git" ]]; then
+        echo "  • Cloning llama.cpp …"
         git clone "https://github.com/ggml-org/llama.cpp" "$LLAMA_ROOT"
     else
+        echo "  • Pulling latest changes …"
         git -C "$LLAMA_ROOT" pull --ff-only
     fi
 
-    # --- Prepare destination ---
+    # 3. Prepare destination dirs
     mkdir -p "$GGUF_ROOT/conversion" "$GGUF_ROOT/scripts"
 
-    # --- Copy conversion helpers ---
-    cp -a --update=older "$LLAMA_ROOT/conversion/."    "$GGUF_ROOT/conversion"
+    # 4. Copy conversion helpers
+    echo "  • Copying conversion helpers …"
+    rsync -a --update  "$LLAMA_ROOT/conversion/" "$GGUF_ROOT/conversion/"
 
-    # --- Copy gguf‑py utilities ---
-    cp -a --update=older "$LLAMA_ROOT/gguf-py/gguf/scripts/." "$GGUF_ROOT/scripts"
+    # 5. Copy gguf‑py utilities
+    echo "  • Copying gguf‑py scripts …"
+    rsync -a --update  "$LLAMA_ROOT/gguf-py/gguf/scripts/" "$GGUF_ROOT/scripts/"
 
-    # --- Copy core gguf library ---
-    cp -a --update=older "$LLAMA_ROOT/gguf-py/gguf/." "$GGUF_ROOT"
+    # 6. Copy core gguf library
+    echo "  • Copying core gguf library …"
+    rsync -a --update  "$LLAMA_ROOT/gguf-py/gguf/" "$GGUF_ROOT/"
 
-    # --- Install HF→GGUF converter ---
-    cp -a --update=older "$LLAMA_ROOT/convert_hf_to_gguf.py" "$GGUF_ROOT/__main__.py"
+    # 7. Install HF→GGUF converter
+    echo "  • Installing HF→GGUF converter …"
+    cp -a --update "$LLAMA_ROOT/convert_hf_to_gguf.py" "$GGUF_ROOT/__main__.py"
+
+    # 8. Optional: force overwrite of __init__ if requested
+    if $force; then
+        echo "  • Overwriting __init__ (force)"
+        rsync -a "$LLAMA_ROOT/gguf-py/gguf/__init__.py" "$GGUF_ROOT/__init__.py"
+    fi
 }
 
-# fix import paths
-function update_import() {
-    # 1. Find every .py file under gguf – but skip __pycache__ dirs
-    # 2. For each file run sed in place, replacing the old import with the new one
-    # 3. Touch only the file that contains the imports.
-
-    find gguf -type f -name '*.py' -not -path '*/__pycache__/*' -exec \
+update_import() {
+    echo "Updating import statements in local gguf tree …"
+    # 1. Simple relative imports → package imports
+    find "$GGUF_ROOT" -type f -name '*.py' -not -path '*/__pycache__/*' -exec \
         sed -i 's/from conversion/from gguf.conversion/g' {} +
 
+    # 2. Dynamic imports via __import__
     sed -i -E \
-    's/(__import__\(f")conversion\.([^"]*")/\1gguf.conversion.\2/g' \
-    gguf/conversion/__init__.py
+        's/(__import__\(f")conversion\.([^"]*")/\1gguf.conversion.\2/g' \
+        $GGUF_ROOT/conversion/__init__.py
 }
 
-# build gguf package
-function build() {
+build() {
+    echo "Building wheel with \`python -m build\` …"
+    source .venv/bin/activate
     python -m build .
+    deactivate
 }
 
-# 1. setup
-# 2. sync
-# 3. fix import references
-# 4. build dist wheel
-# All done!
+help() {
+    cat <<'EOF'
+Usage: ./build.sh <command> [options]
+
+Commands:
+  clean                Remove build artifacts (.venv, .cache, dist, etc.)
+  setup                Create a fresh Python virtualenv and install deps
+  sync [--force]       Pull latest llama.cpp and copy files into gguf/
+                       (use --force to overwrite __init__ if needed)
+  update_import        Adjust import statements for the local layout
+  build                Build the wheel (python -m build .)
+  all                  Run all build steps in chronological order.
+  help                 Show this help
+EOF
+}
+
+# ------------------------------------------------------------------
+# 4. Command dispatcher
+# ------------------------------------------------------------------
+case "$1" in
+    clean)  clean   ;;
+    setup)  setup   ;;
+    sync)   shift; sync "$@" ;;
+    update_import) update_import ;;
+    build)  build   ;;
+    all)
+        clean
+        setup
+        shift; sync "$@";
+        update_import
+        build
+        ;;
+    help|--help|-h) help ;;
+    *) echo "Unknown command: $1" >&2; help; exit 1 ;;
+esac
