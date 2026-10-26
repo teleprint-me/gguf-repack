@@ -49,7 +49,7 @@ llama-quantize \
 
 | Script | Purpose |
 |--------|---------|
-| `sync_gguf.sh` | Pulls the latest changes from `llama.cpp` and updates the local copy, preserving timestamps and file hierarchies. |
+| `sync.sh` | Pulls the latest changes from `llama.cpp` and updates the local copy, preserving timestamps and file hierarchies. |
 | `build_gguf.sh` | Runs `sync_gguf.sh`, then builds the wheel (`python -m build`). |
 | `repack.sh` | A quick helper that uses `find`/`sed` to adjust import paths after copying files. |
 
