@@ -1,0 +1,99 @@
+{
+    "black-formatter.args": [
+        "--line-length",
+        "89"
+    ],
+    "chat.disableAIFeatures": true,
+    "clang-format.executable": "clang-format",
+    "diffEditor.renderSideBySide": false,
+    "editor.experimental.treeSitterTelemetry": false,
+    "editor.defaultFormatter": null,
+    "editor.stickyTabStops": true,
+    "editor.tabCompletion": "on",
+    "editor.wordWrap": "on",
+    "editor.fontSize": 10,
+    "editor.fontFamily": "'Noto Sans Mono', 'Source Code Pro', 'Droid Sans Mono'",
+    "editor.detectIndentation": false,
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "editor.lightbulb.enabled": "off",
+    "editor.wordWrapColumn": 80,
+    "editor.inlineSuggest.enabled": true,
+    "editor.inlayHints.enabled": "off",
+    "editor.renderWhitespace": "all",
+    "explorer.confirmDragAndDrop": false,
+    "extensions.ignoreRecommendations": false,
+    "files.associations": {
+        "*.c": "c",
+        "*.h": "c"
+    },
+    "isort.args": [
+        "--profile",
+        "black"
+    ],
+    "python.autoComplete.extraPaths": [
+        "${workspaceFolder}/.venv/bin",
+        "${workspaceFolder}/.venv/lib/python3.13/site-packages"
+    ],
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+    "python.languageServer": "Default",
+    "python.REPL.enableREPLSmartSend": false,
+    "telemetry.editStats.details.enabled": false,
+    "telemetry.editStats.enabled": false,
+    "telemetry.editStats.showDecorations": false,
+    "telemetry.editStats.showStatusBar": false,
+    "telemetry.feedback.enabled": false,
+    "terminal.integrated.fontSize": 10,
+    "workbench.colorTheme": "Rosé Pine Moon",
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.layoutControl.enabled": false,
+    "workbench.navigationControl.enabled": false,
+    "workbench.startupEditor": "none",
+    "window.zoomLevel": 0,
+    "[c]": {
+        "editor.defaultFormatter": "xaver.clang-format",
+        "editor.tabSize": 4,
+        "editor.formatOnSave": true,
+        "editor.insertSpaces": true
+    },
+    "[css]": {
+        "editor.defaultFormatter": "vscode.css-language-features",
+        "editor.formatOnSave": true
+    },
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features",
+        "editor.formatOnSave": true
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.formatOnSave": true
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features",
+        "editor.formatOnSave": true
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "vscode.markdown-language-features",
+        "editor.formatOnSave": true
+    },
+    "[makefile]": {
+        "editor.defaultFormatter": "vscode.markdown-language-features",
+        "editor.tabSize": 4,
+        "editor.formatOnSave": true,
+        "editor.insertSpaces": false,
+        "editor.formatOnPaste": true,
+        "editor.formatOnType": true,
+        "editor.trimAutoWhitespace": true,
+        "editor.codeActionsOnSave": {
+            "source.fixAll": "explicit"
+        }
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true,
+        "editor.formatOnPaste": false,
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        }
+    }
+}
