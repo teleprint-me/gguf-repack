@@ -1,6 +1,7 @@
 # Local
 .cache
 gguf
+*.gguf
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
