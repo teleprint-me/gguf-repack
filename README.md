@@ -8,7 +8,7 @@
 ```bash
 git clone https://github.com/teleprint-me/gguf-repack gguf-repack
 cd gguf-repack
-./build_gguf.sh
+./build.sh
 ```
 
 The script does everything for you:
@@ -19,7 +19,7 @@ The script does everything for you:
 After the build you can install the package in any environment:
 
 ```bash
-pip install dist/gguf-0.19.0-py3-none-any.whl
+pip install dist/gguf-0.19.2-py3-none-any.whl
 ```
 
 ## Usage Example
@@ -49,8 +49,9 @@ llama-quantize \
 
 | Script | Purpose |
 |--------|---------|
+| `setup.sh` | Set up the python virtual environment and install required dependencies. |
 | `sync.sh` | Pulls the latest changes from `llama.cpp` and updates the local copy, preserving timestamps and file hierarchies. |
-| `build_gguf.sh` | Runs `sync_gguf.sh`, then builds the wheel (`python -m build`). |
+| `build.sh` | Runs `sync.sh`, then builds the wheel (`python -m build`). |
 | `repack.sh` | A quick helper that uses `find`/`sed` to adjust import paths after copying files. |
 
 Feel free to modify or extend these scripts – they are intentionally simple and shell‑centric.
