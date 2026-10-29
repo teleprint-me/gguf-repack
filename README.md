@@ -14,7 +14,7 @@ cd gguf-repack
 The script does everything for you:
 1. Clones or updates the `llama.cpp` repository into `.cache/llama.cpp`.
 2. Copies the `conversion` helpers, `gguf‑py` utilities, and the original `convert_hf_to_gguf.py` into a single `gguf/` package.
-3. Builds a `gguf‑0.19.0-py3‑none‑any.whl` and a source distribution.
+3. Builds a `gguf‑x.xx.x-py3‑none‑any.whl` and a source distribution.
 
 After the build you can install the package in any environment:
 
@@ -39,6 +39,7 @@ python -m gguf /mnt/models/openai/gpt-oss-20b/ \
 Once the GGUF file is created you can quantise it with the `llama.cpp` tool:
 
 ```bash
+# Convert select tensors from bf16 to q8_0
 llama-quantize \
     models/gpt-oss/gpt-oss-20b-bf16.gguf \
     models/gpt-oss/gpt-oss-20b-mxfp4.gguf \
