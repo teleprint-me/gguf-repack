@@ -2,13 +2,14 @@
 # ==============================================================
 #  build.sh – helper for the gguf‑repack repository
 # ==============================================================
-#  * clean   – remove build artefacts
-#  * setup   – create a fresh venv and install deps
-#  * sync    – pull the latest llama.cpp repo and copy files
+#  * clean    – remove build artefacts
+#  * setup    – create a fresh venv and install deps
+#  * git_sync – pull the latest llama.cpp repo and copy files
 #  * update_import – adjust import statements for the local layout
-#  * build   – run `python -m build`
-#  * all     – run all build steps in canonical order.
-#  * help    – show this help
+#  * build    – run `python -m build`
+#  * new      – clean, setup, and run all build steps in canonical order.
+#  * update   – run all build steps in canonical order. 
+#  * help     – show this help
 #
 #  Usage: ./build.sh <command> [args]
 # ==============================================================
@@ -34,13 +35,14 @@ usage() {
 Usage: ./build.sh <command> [options]
 
 Commands:
-  clean                Remove build artefacts (.venv, .cache, dist, etc.)
-  setup                Create a fresh Python virtualenv and install deps
-  sync [--force] [--quiet]   Pull latest llama.cpp and copy files into gguf/
-  update_import        Adjust import statements for the local layout
-  build                Build the wheel (python -m build .)
-  all                  Run all build steps in canonical order.
-  help                 Show this help
+  clean                          Remove build artefacts (.venv, .cache, dist, etc.)
+  setup                          Create a fresh Python virtualenv and install deps
+  git_sync [--force] [--quiet]   Pull latest llama.cpp and copy files into gguf/
+  update_import                  Adjust import statements for the local layout
+  build                          Build the wheel (python -m build .)
+  new                            Clean, setup, and run all build steps in canonical order.
+  update                         Run all build steps in canonical order.
+  help                           Show this help
 EOF
     exit 0
 }
@@ -73,7 +75,7 @@ setup() {
     deactivate
 }
 
-sync() {
+git_sync() {
     local force=false quiet=false
     # Parse optional flags
     while [[ "$1" == "--force" || "$1" == "--quiet" ]]; do
@@ -145,15 +147,20 @@ build() {
 # 4. Command dispatcher
 # ---
 case "$1" in
-    clean)  clean   ;;
-    setup)  setup   ;;
-    sync)   shift; sync "$@" ;;
+    clean)         clean   ;;
+    setup)         setup   ;;
+    git_sync)      shift; git_sync "$@" ;;
     update_import) update_import ;;
-    build)  build   ;;
-    all)
+    build)         build   ;;
+    new)
         clean
         setup
-        sync
+        git_sync
+        update_import
+        build
+        ;;
+    update)
+        git_sync
         update_import
         build
         ;;
