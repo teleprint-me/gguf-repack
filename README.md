@@ -46,10 +46,3 @@ llama-quantize \
     MXFP4_MOE
 ```
 
-## Scripts
-
-| Script | Purpose |
-|--------|---------|
-| `build.sh` | Runs `sync.sh`, then builds the wheel (`python -m build`). |
-
-Feel free to modify or extend these scripts – they are intentionally simple and shell‑centric.
