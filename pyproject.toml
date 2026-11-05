@@ -2,7 +2,7 @@
 
 [project]
 name = "gguf"
-version = "0.19.2"
+version = "0.19.3"
 description = "Read and write ML models in GGUF for GGML"
 keywords = ["ggml", "gguf", "llama.cpp"]
 readme = "README.md"
