@@ -19,7 +19,7 @@ The script does everything for you:
 After the build you can install the package in any environment:
 
 ```bash
-pip install dist/gguf-0.19.2-py3-none-any.whl
+pip install dist/gguf-x.xx.x-py3-none-any.whl
 ```
 
 ## Usage Example
@@ -50,9 +50,6 @@ llama-quantize \
 
 | Script | Purpose |
 |--------|---------|
-| `setup.sh` | Set up the python virtual environment and install required dependencies. |
-| `sync.sh` | Pulls the latest changes from `llama.cpp` and updates the local copy, preserving timestamps and file hierarchies. |
 | `build.sh` | Runs `sync.sh`, then builds the wheel (`python -m build`). |
-| `repack.sh` | A quick helper that uses `find`/`sed` to adjust import paths after copying files. |
 
 Feel free to modify or extend these scripts – they are intentionally simple and shell‑centric.
