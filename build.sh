@@ -73,7 +73,6 @@ setup() {
     deactivate
 }
 
-# --- sync ---
 sync() {
     local force=false quiet=false
     # Parse optional flags
@@ -123,7 +122,6 @@ sync() {
     fi
 }
 
-# --- update_import ---
 update_import() {
     echo "Updating import statements in local gguf tree …"
     # 1. Simple relative imports → package imports
@@ -136,7 +134,6 @@ update_import() {
         "$GGUF_ROOT/conversion/__init__.py"
 }
 
-# --- build ---
 build() {
     echo "Building wheel with \`python -m build\` …"
     source "$VENV_DIR/bin/activate"
