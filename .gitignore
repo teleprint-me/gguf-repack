@@ -1,6 +1,6 @@
 # Local
 .cache
-gguf
+.models
 *.gguf
 NOTES.md
 
